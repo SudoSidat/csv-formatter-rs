@@ -10,6 +10,8 @@ def main():
     user_menu()
 
 def user_menu():
+    ''' Looped menu to provide different options for user.
+        Single file transformation or all files transformation.'''
     while True:
         menuInput = input("""
         Please enter number of which feed you want to clean:
@@ -76,6 +78,9 @@ def auto_detected_delimiter():
     return delimiter
 
 def auto_detected_file(file_contains, delimiter):
+    ''' Uses str.contains to search for prefix
+        of file names, if unfound program will
+        terminate.'''
     for file_counter in os.listdir('.'):
         if file_contains.lower() in file_counter.lower():
             file = file_counter
@@ -88,10 +93,13 @@ def auto_detected_file(file_contains, delimiter):
     return file
 
 def initialise_dataframe(file, delimiter):
+    ''' Creates Panadas dataframe from csv read data.'''
     df = pd.read_csv(file, skipinitialspace = True, encoding ='utf-8', encoding_errors = 'backslashreplace', converters = {'accountreference' : lambda x: str(x)}, sep = delimiter, keep_default_na=False)
     return df
 
 def account_validation(file, df):
+    ''' Validation specific to rent.accounts, checks for value
+        in LocalAuthority field if null then it will fill default data.'''
     if ('acc' in file.lower()):
         df.loc[(df.LocalAuthority == '') | (df.LocalAuthority == 'Unknown') | (df.LocalAuthority == 'NULL'), 'LocalAuthority'] = "Default HB Cycle"
         print('******************************************************************************************************************************')
@@ -110,32 +118,33 @@ def check_row_length(delimiter, file):
         Compares number to the no. of Rows
         Flags if there's a mismatch.
         Can Continue program or terminate if issues found.'''
-    badColumns = 0
+    bad_columns = 0
     with open(file, newline='') as csvfile:
         reader = csv.reader(csvfile, delimiter=delimiter)
-        firstRow = next(reader)
-        columnLength = len(firstRow)
+        first_row = next(reader)
+        column_length = len(first_row)
         for row in reader:
             if len(row) == 0:
                 continue
-            elif len(row) < columnLength:
-                print ('Columns Expected = ' + str(columnLength) + ', Actual Columns = ' + str(len(row)) + '. Line number: ' + str(reader.line_num))
-                badColumns =+1
-            elif len(row) > columnLength:
-                print ('Columns Expected = ' + str(columnLength) + ', Actual Columns = ' + str(len(row)) + '. Line number: ' + str(reader.line_num))
-                badColumns =+1
+            elif len(row) < column_length:
+                print ('Columns Expected = ' + str(column_length) + ', Actual Columns = ' + str(len(row)) + '. Line number: ' + str(reader.line_num))
+                bad_columns =+1
+            elif len(row) > column_length:
+                print ('Columns Expected = ' + str(column_length) + ', Actual Columns = ' + str(len(row)) + '. Line number: ' + str(reader.line_num))
+                bad_columns =+1
     csvfile.close()
-    if (badColumns >= 1):
+    if (bad_columns >= 1):
         print('*********************************************************************************************************************************************************')
-        playerChoice = input('Check the files output and fix those before you proceed with cleanse, You can override this by pressing y or Y or press anything to exit and review file.')
+        menu_choice = input('Check the files output and fix those before you proceed with cleanse, You can override this by pressing y or Y or press anything to exit and review file.')
         print('*********************************************************************************************************************************************************')
-        if playerChoice.lower() != 'y':
+        if menu_choice.lower() != 'y':
             print('*************************')
             sys.exit('Program now terminated')
             print('*************************')
 
 def getdelimiterValueWithValidation():
-    ''' NOT IN USE ANYMORE'''
+    ''' NOT IN USE ANYMORE
+        Replaced with auto_detected_delimiter()'''
     delimiterVal = '' 
     while True:
         delimiterVal = input('Please enter a delimiter value of | or , or tab: ')
@@ -149,6 +158,8 @@ def getdelimiterValueWithValidation():
     return delimiterVal        
 
 def transform_dataframe(file, df):
+    ''' Takes out commas, nulls, apostrophe values
+        from the data.'''
     #load CSV as panda dataframe - converters keeps padding in accountReference
     print(df.head(10))
     print(df.dtypes)
@@ -164,7 +175,7 @@ def transform_dataframe(file, df):
 
 def date_parser(file, df):
     #Timestamp('2262-04-11 23:47:16.854775807') limitation for year
-    # search for all columns with date then only parse them
+    #Search for all columns with date then only parse them
     if 'acc' in file.lower():
         account_validation(file, df)
         df['TenancyStartDate'] = pd.to_datetime(df.TenancyStartDate, dayfirst=True)
@@ -231,6 +242,7 @@ def date_parser(file, df):
         print('Did not parse any dates, check file name for issues.')
 
 def get_current_date():
+    ''' Used for writing into the filename.'''
     date = datetime.date(datetime.now())
     date = date.strftime('%Y%m%d')
     return date
