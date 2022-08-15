@@ -4,10 +4,105 @@ import csv
 import time
 import sys
 import os
+from detect_delimiter import detect
 
-file = ''
-df = ''
-date = ''
+def main():
+    user_menu()
+
+def user_menu():
+    while True:
+        menuInput = input("""
+        Please enter number of which feed you want to clean:
+        1. rent.accounts
+        2. rent.transactions
+        3. rent.actions
+        4. rent.arrangements
+        5. rent.balances
+        6. rent.tenants
+        7. rent.contacts
+        8. rent.hmsrecommendations
+        9. All files.
+        """)
+
+        if menuInput.isdigit() == False:
+            print("Not an appropriate choice, please enter a number.")
+        else:
+            menuInput = int(menuInput)
+            break
+            
+    if menuInput == 1:
+        controller('acc', 'rent.accounts')
+    elif menuInput == 2:
+        controller('trans', 'rent.transactions')
+    elif menuInput == 3:
+        controller('rent.action', 'rent.actions')
+    elif menuInput == 4:
+        controller('arrang', 'rent.arrangements')   
+    elif menuInput == 5:
+        controller('balan', 'rent.balances')          
+    elif menuInput == 6:
+        controller('tenan', 'rent.tenants')          
+    elif menuInput == 7:
+        controller('conta', 'rent.contacts')                  
+    elif menuInput == 8:
+        controller('rec', 'rent.hmsrecommendations')                  
+    elif menuInput == 9:
+        delimeter = auto_detected_delimeter()
+        controllerAllFiles('acc', 'rent.accounts', delimeter)
+        controllerAllFiles('trans', 'rent.transactions', delimeter)
+        controllerAllFiles('rent.action', 'rent.actions', delimeter)
+        controllerAllFiles('arrang', 'rent.arrangements', delimeter)   
+        controllerAllFiles('balan', 'rent.balances', delimeter)          
+        controllerAllFiles('tenan', 'rent.tenants', delimeter)
+        controllerAllFiles('conta', 'rent.contacts', delimeter)                            
+        controllerAllFiles('rec', 'rent.hmsrecommendations', delimeter)                  
+    else:
+        sys.exit(0)
+
+def auto_detected_delimeter():
+    ''' Function used to determine the delimeter set 
+        Automatically, defaults to comma but will 
+        detect other seperators if ! comma.
+        Returns delimeter, can feed into any function'''
+    with open('rent.accounts20220808.csv', newline='') as csvfile:
+        reader = csv.reader(csvfile)
+        row1 = next(reader)  # gets the first line
+        csvfile.close()
+        delimeter = detect(row1[0])
+        if delimeter == None: 
+            delimeter = ','
+            print ('Delimeter = ' + delimeter)
+        else: 
+            print ('Delimeter = ' + delimeter)
+    return delimeter
+
+
+def autoDetectFile(fileContains, delimeter):
+    newFile = '' 
+    for file in os.listdir('.'):
+        if fileContains.lower() in file.lower():
+            newFile = file
+    if newFile == '':
+        print('*********************************************************************************************************************************************************')
+        sys.exit('Cant find file that contains ' + fileContains + ', please rename file accordingly, program will now exit.')
+        print('*********************************************************************************************************************************************************')
+    else:
+        file = newFile
+    print('File found: ' + file)
+    badColumnsCheck = checkColumnLengthInRow(delimeter)
+    if (badColumnsCheck >= 1):
+        print('*********************************************************************************************************************************************************')
+        playerChoice = input('Check the files output and fix those before you proceed with cleanse, You can override this by pressing y or Y or press anything to exit and review file.')
+        print('*********************************************************************************************************************************************************')
+        if playerChoice.lower() != 'y':
+            print('*************************')
+            sys.exit('Program now terminated')
+            print('*************************')
+    return file
+    
+def initialise_dataframe(file):
+    df = pd.read_csv(file, skipinitialspace = True, encoding ='utf-8', encoding_errors = 'backslashreplace', converters = {'accountreference' : lambda x: str(x)}, sep = delimeterVal, keep_default_na=False)
+
 
 def accountValidation():
     if ('acc' in file.lower()):
@@ -23,41 +118,10 @@ def accountValidation():
             df.loc[(df.NeedsCategory == ''),'NeedsCategory'] = "Default Data"
             print('NeedsCategory column has now been added with default value')
 
-
-def autoDetectFile(fileContains, delimeterVal):
-    global file
-    global df
-    global date
-    newFile = '' 
-    for file in os.listdir('.'):
-        if fileContains.lower() in file.lower():
-            newFile = file
-    if newFile == '':
-        print('*********************************************************************************************************************************************************')
-        sys.exit('Cant find file that contains ' + fileContains + ', please rename file accordingly, program will now exit.')
-        print('*********************************************************************************************************************************************************')
-    else:
-        file = newFile
-    print('File found: ' + file)
-    date = datetime.date(datetime.now())
-    date = date.strftime('%Y%m%d')
-    badColumnsCheck = checkColumnLengthInRow(delimeterVal)
-    if (badColumnsCheck >= 1):
-        print('*********************************************************************************************************************************************************')
-        playerChoice = input('Check the files output and fix those before you proceed with cleanse, You can override this by pressing y or Y or press anything to exit and review file.')
-        print('*********************************************************************************************************************************************************')
-        if playerChoice.lower() != 'y':
-            print('*************************')
-            sys.exit('Program now terminated')
-            print('*************************')
-    df = pd.read_csv(file, skipinitialspace = True, encoding ='utf-8', encoding_errors = 'backslashreplace', converters = {'accountreference' : lambda x: str(x)}, sep = delimeterVal, keep_default_na=False)
-   
-
-
-def checkColumnLengthInRow(delimeterVal):
+def checkColumnLengthInRow(delimeter):
     badColumns = 0
     with open(file, newline='') as csvfile:
-        reader = csv.reader(csvfile, delimiter=delimeterVal)
+        reader = csv.reader(csvfile, delimiter=None)
         firstRow = next(reader)
         columnLength = len(firstRow)
         for row in reader:
@@ -72,6 +136,7 @@ def checkColumnLengthInRow(delimeterVal):
     return badColumns
 
 def getDelimeterValueWithValidation():
+    ''' NOT IN USE ANYMORE'''
     delimeterVal = '' 
     while True:
         delimeterVal = input('Please enter a delimeter value of | or , or tab: ')
@@ -187,7 +252,8 @@ def writeToCsv(fileNameToWrite):
     os.chdir(existingPath)
 
 def controller(fileNameContainsString, fileNameToWrite):
-    autoDetectFile(fileNameContainsString, getDelimeterValueWithValidation())
+    delimeter = auto_detected_delimeter()
+    autoDetectFile(fileNameContainsString, delimeter)
     cleanDataFramefile(file)
     repaceNullValues(file)
     dateParser(file)
@@ -201,64 +267,4 @@ def controllerAllFiles(fileNameContainsString, fileNameToWrite, delimValue):
     writeToCsv(fileNameToWrite)
 
 if __name__ == "__main__":
-
-  
-    while True:
-        menuInput = input("""
-        Please enter number of which feed you want to clean:
-        1. rent.accounts
-        2. rent.transactions
-        3. rent.actions
-        4. rent.arrangements
-        5. rent.balances
-        6. rent.tenants
-        7. rent.contacts
-        8. rent.hmsrecommendations
-        9. All files.
-        """)
-        #menuInput = int(menuInput)
-        if menuInput.isdigit() == False:
-            print("Not an appropriate choice, please enter a number.")
-        else:
-            menuInput = int(menuInput)
-            break
-            
-    if menuInput == 1:
-        controller('acc', 'rent.accounts')
-    elif menuInput == 2:
-        controller('trans', 'rent.transactions')
-    elif menuInput == 3:
-        controller('rent.action', 'rent.actions')
-    elif menuInput == 4:
-        controller('arrang', 'rent.arrangements')   
-    elif menuInput == 5:
-        controller('balan', 'rent.balances')          
-    elif menuInput == 6:
-        controller('tenan', 'rent.tenants')          
-    elif menuInput == 7:
-        controller('conta', 'rent.contacts')                  
-    elif menuInput == 8:
-        controller('rec', 'rent.hmsrecommendations')                  
-    elif menuInput == 9:
-        delimeter = getDelimeterValueWithValidation()
-        controllerAllFiles('acc', 'rent.accounts', delimeter)
-        controllerAllFiles('trans', 'rent.transactions', delimeter)
-        controllerAllFiles('rent.action', 'rent.actions', delimeter)
-        controllerAllFiles('arrang', 'rent.arrangements', delimeter)   
-        controllerAllFiles('balan', 'rent.balances', delimeter)          
-        controllerAllFiles('tenan', 'rent.tenants', delimeter)
-        controllerAllFiles('conta', 'rent.contacts', delimeter)                            
-        controllerAllFiles('rec', 'rent.hmsrecommendations', delimeter)                  
-    else:
-        sys.exit(0)
-
-#file names
-#rent.transactionsyyyymmdd.csv
-#rent.accountsyyyymmdd.csv
-#rent.transactionsyyyymmdd.csv
-#rent.actionsyyyymmdd.csv
-#rent.arrangementsyyyymmdd.csv
-#rent.balancesyyyymmdd.csv
-#rent.tenantsyyyymmdd.csv
-#rent.hmsrecommendationsyyyymmdd.csv
-#rent.contactsyyyymmdd.csv
+    main()
