@@ -47,64 +47,51 @@ def user_menu():
     elif menuInput == 8:
         controller('rec', 'rent.hmsrecommendations')                  
     elif menuInput == 9:
-        delimeter = auto_detected_delimeter()
-        controllerAllFiles('acc', 'rent.accounts', delimeter)
-        controllerAllFiles('trans', 'rent.transactions', delimeter)
-        controllerAllFiles('rent.action', 'rent.actions', delimeter)
-        controllerAllFiles('arrang', 'rent.arrangements', delimeter)   
-        controllerAllFiles('balan', 'rent.balances', delimeter)          
-        controllerAllFiles('tenan', 'rent.tenants', delimeter)
-        controllerAllFiles('conta', 'rent.contacts', delimeter)                            
-        controllerAllFiles('rec', 'rent.hmsrecommendations', delimeter)                  
+        controller('acc', 'rent.accounts')
+        controller('trans', 'rent.transactions')
+        controller('rent.action', 'rent.actions')
+        controller('arrang', 'rent.arrangements')   
+        controller('balan', 'rent.balances')          
+        controller('tenan', 'rent.tenants')          
+        controller('conta', 'rent.contacts')                  
+        controller('rec', 'rent.hmsrecommendations')                            
     else:
         sys.exit(0)
 
-def auto_detected_delimeter():
-    ''' Function used to determine the delimeter set 
+def auto_detected_delimiter():
+    ''' Function used to determine the delimiter set 
         Automatically, defaults to comma but will 
         detect other seperators if ! comma.
-        Returns delimeter, can feed into any function'''
+        Returns delimiter, can feed into any function'''
     with open('rent.accounts20220808.csv', newline='') as csvfile:
         reader = csv.reader(csvfile)
         row1 = next(reader)  # gets the first line
         csvfile.close()
-        delimeter = detect(row1[0])
-        if delimeter == None: 
-            delimeter = ','
-            print ('Delimeter = ' + delimeter)
+        delimiter = detect(row1[0])
+        if delimiter == None: 
+            delimiter = ','
+            print ('Delimiter = ' + delimiter)
         else: 
-            print ('Delimeter = ' + delimeter)
-    return delimeter
+            print ('Delimiter = ' + delimiter)
+    return delimiter
 
-
-def autoDetectFile(fileContains, delimeter):
-    newFile = '' 
-    for file in os.listdir('.'):
-        if fileContains.lower() in file.lower():
-            newFile = file
-    if newFile == '':
+def auto_detected_file(file_contains, delimiter):
+    for file_counter in os.listdir('.'):
+        if file_contains.lower() in file_counter.lower():
+            file = file_counter
+    if file == '':
         print('*********************************************************************************************************************************************************')
-        sys.exit('Cant find file that contains ' + fileContains + ', please rename file accordingly, program will now exit.')
+        sys.exit('Cant find file that contains ' + file_contains + ', please rename file accordingly, program will now exit.')
         print('*********************************************************************************************************************************************************')
     else:
-        file = newFile
-    print('File found: ' + file)
-    badColumnsCheck = checkColumnLengthInRow(delimeter)
-    if (badColumnsCheck >= 1):
-        print('*********************************************************************************************************************************************************')
-        playerChoice = input('Check the files output and fix those before you proceed with cleanse, You can override this by pressing y or Y or press anything to exit and review file.')
-        print('*********************************************************************************************************************************************************')
-        if playerChoice.lower() != 'y':
-            print('*************************')
-            sys.exit('Program now terminated')
-            print('*************************')
+        print('File found: ' + file)
     return file
-    
-def initialise_dataframe(file):
-    df = pd.read_csv(file, skipinitialspace = True, encoding ='utf-8', encoding_errors = 'backslashreplace', converters = {'accountreference' : lambda x: str(x)}, sep = delimeterVal, keep_default_na=False)
 
+def initialise_dataframe(file, delimiter):
+    df = pd.read_csv(file, skipinitialspace = True, encoding ='utf-8', encoding_errors = 'backslashreplace', converters = {'accountreference' : lambda x: str(x)}, sep = delimiter, keep_default_na=False)
+    return df
 
-def accountValidation():
+def account_validation(file, df):
     if ('acc' in file.lower()):
         df.loc[(df.LocalAuthority == '') | (df.LocalAuthority == 'Unknown') | (df.LocalAuthority == 'NULL'), 'LocalAuthority'] = "Default HB Cycle"
         print('******************************************************************************************************************************')
@@ -118,10 +105,14 @@ def accountValidation():
             df.loc[(df.NeedsCategory == ''),'NeedsCategory'] = "Default Data"
             print('NeedsCategory column has now been added with default value')
 
-def checkColumnLengthInRow(delimeter):
+def check_row_length(delimiter, file):
+    ''' Finds the number of columns 
+        Compares number to the no. of Rows
+        Flags if there's a mismatch.
+        Can Continue program or terminate if issues found.'''
     badColumns = 0
     with open(file, newline='') as csvfile:
-        reader = csv.reader(csvfile, delimiter=None)
+        reader = csv.reader(csvfile, delimiter=delimiter)
         firstRow = next(reader)
         columnLength = len(firstRow)
         for row in reader:
@@ -133,42 +124,49 @@ def checkColumnLengthInRow(delimeter):
             elif len(row) > columnLength:
                 print ('Columns Expected = ' + str(columnLength) + ', Actual Columns = ' + str(len(row)) + '. Line number: ' + str(reader.line_num))
                 badColumns =+1
-    return badColumns
+    csvfile.close()
+    if (badColumns >= 1):
+        print('*********************************************************************************************************************************************************')
+        playerChoice = input('Check the files output and fix those before you proceed with cleanse, You can override this by pressing y or Y or press anything to exit and review file.')
+        print('*********************************************************************************************************************************************************')
+        if playerChoice.lower() != 'y':
+            print('*************************')
+            sys.exit('Program now terminated')
+            print('*************************')
 
-def getDelimeterValueWithValidation():
+def getdelimiterValueWithValidation():
     ''' NOT IN USE ANYMORE'''
-    delimeterVal = '' 
+    delimiterVal = '' 
     while True:
-        delimeterVal = input('Please enter a delimeter value of | or , or tab: ')
-        if delimeterVal not in ('|', ',', 'tab'):
+        delimiterVal = input('Please enter a delimiter value of | or , or tab: ')
+        if delimiterVal not in ('|', ',', 'tab'):
             print("Not an appropriate choice.")
-        elif (delimeterVal == 'tab'):
-            delimeterVal = '\t'
+        elif (delimiterVal == 'tab'):
+            delimiterVal = '\t'
             break
         else:
             break
-    return delimeterVal        
+    return delimiterVal        
 
-def cleanDataFramefile(file):
+def transform_dataframe(file, df):
     #load CSV as panda dataframe - converters keeps padding in accountReference
     print(df.head(10))
     print(df.dtypes)
     #delete all commas in the dataframe and replace with null
     df.replace(',','', regex = True, inplace = True)
     print ('Replaced all commas with null value.')
+    #delete all commas in the dataframe and replace with null
     df.replace("'",'', regex = True, inplace = True)
     print ('Replaced all apostrophes with null value.')
-    
-def repaceNullValues(file):
-    #delete all commas in the dataframe and replace with null
     df.replace('NULL','', regex = True, inplace = True)
     df.replace('null','', regex = True, inplace = True)
     print ('Replaced the word null with empty value.')
 
-def dateParser(file):
+def date_parser(file, df):
     #Timestamp('2262-04-11 23:47:16.854775807') limitation for year
+    # search for all columns with date then only parse them
     if 'acc' in file.lower():
-        accountValidation()
+        account_validation(file, df)
         df['TenancyStartDate'] = pd.to_datetime(df.TenancyStartDate, dayfirst=True)
         print('Parsed TenancyStartDate into date value.')
         #convert date into DD-MM-YYYY format for Rentsense
@@ -232,9 +230,13 @@ def dateParser(file):
     else:
         print('Did not parse any dates, check file name for issues.')
 
+def get_current_date():
+    date = datetime.date(datetime.now())
+    date = date.strftime('%Y%m%d')
+    return date
 
-def writeToCsv(fileNameToWrite):
-    NewDf = df.astype(str)
+def write_to_csv(filename, df):
+    df.astype(str)
     print ('forced all columns as string.')
     existingPath = os.getcwd()
     newPath = os.getcwd() + '\Cleaned Files'
@@ -246,25 +248,19 @@ def writeToCsv(fileNameToWrite):
         print ("Successfully created the directory %s " % newPath)
     os.chdir(newPath)
     #takes out null occurences after parsing dataframe as string
-    NewDf.replace('nan','', regex = True, inplace = True)
-    NewDf.to_csv(fileNameToWrite + str(date) + '.csv', encoding ='utf-8', index = False)
+    df.replace('nan','', regex = True, inplace = True)
+    df.to_csv(filename + str(get_current_date()) + '.csv', encoding ='utf-8', index = False)
     print(str(time.process_time()) + ' seconds taken to clean feed.')
     os.chdir(existingPath)
 
-def controller(fileNameContainsString, fileNameToWrite):
-    delimeter = auto_detected_delimeter()
-    autoDetectFile(fileNameContainsString, delimeter)
-    cleanDataFramefile(file)
-    repaceNullValues(file)
-    dateParser(file)
-    writeToCsv(fileNameToWrite)
-
-def controllerAllFiles(fileNameContainsString, fileNameToWrite, delimValue):
-    autoDetectFile(fileNameContainsString, delimValue)
-    cleanDataFramefile(file)
-    repaceNullValues(file)
-    dateParser(file)
-    writeToCsv(fileNameToWrite)
+def controller(file_contains, filename_write):
+    delimiter = auto_detected_delimiter()
+    file = auto_detected_file(file_contains, delimiter)
+    check_row_length(delimiter, file)
+    df = initialise_dataframe(file, delimiter)
+    transform_dataframe(file, df)
+    date_parser(file, df)
+    write_to_csv(filename_write, df)
 
 if __name__ == "__main__":
     main()
