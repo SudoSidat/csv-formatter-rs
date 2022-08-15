@@ -60,12 +60,12 @@ def user_menu():
     else:
         sys.exit(0)
 
-def auto_detected_delimiter():
+def auto_detected_delimiter(file):
     ''' Function used to determine the delimiter set 
         Automatically, defaults to comma but will 
         detect other seperators if ! comma.
         Returns delimiter, can feed into any function'''
-    with open('rent.accounts20220808.csv', newline='') as csvfile:
+    with open(file, newline='') as csvfile:
         reader = csv.reader(csvfile)
         row1 = next(reader)  # gets the first line
         csvfile.close()
@@ -77,7 +77,7 @@ def auto_detected_delimiter():
             print ('Delimiter = ' + delimiter)
     return delimiter
 
-def auto_detected_file(file_contains, delimiter):
+def auto_detected_file(file_contains):
     ''' Uses str.contains to search for prefix
         of file names, if unfound program will
         terminate.'''
@@ -173,6 +173,32 @@ def transform_dataframe(file, df):
     df.replace('null','', regex = True, inplace = True)
     print ('Replaced the word null with empty value.')
 
+def date_parserv2(file, df):
+    date_columns = []
+    column_headers = list(df.columns.values)
+    for column in column_headers:
+        if 'date' in column.lower():
+            date_columns.append(column)
+        else:
+            next
+    print('Columns to date parse:')
+    print (date_columns)
+
+    if len(date_columns) > 0:
+        for to_parse in date_columns:
+            parse_name = name_of_global_obj(to_parse)
+            print (to_parse)
+            print (parse_name)
+
+            df[str(to_parse)] = pd.to_datetime(df.to_parse, dayfirst=True)
+            print('Parsed ' + to_parse + ' into date value.')
+            #convert date into DD-MM-YYYY format for Rentsense
+            df[str(to_parse)] = df[str(to_parse)].dt.strftime('%Y-%m-%d')
+
+def name_of_global_obj(xx):
+    return [objname for objname, oid in globals().items()
+            if id(oid)==id(xx)][0]
+
 def date_parser(file, df):
     #Timestamp('2262-04-11 23:47:16.854775807') limitation for year
     #Search for all columns with date then only parse them
@@ -266,12 +292,12 @@ def write_to_csv(filename, df):
     os.chdir(existingPath)
 
 def controller(file_contains, filename_write):
-    delimiter = auto_detected_delimiter()
-    file = auto_detected_file(file_contains, delimiter)
+    file = auto_detected_file(file_contains)
+    delimiter = auto_detected_delimiter(file)
     check_row_length(delimiter, file)
     df = initialise_dataframe(file, delimiter)
     transform_dataframe(file, df)
-    date_parser(file, df)
+    date_parserv2(file, df)
     write_to_csv(filename_write, df)
 
 if __name__ == "__main__":
