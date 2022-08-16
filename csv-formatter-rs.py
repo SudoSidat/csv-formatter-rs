@@ -81,15 +81,17 @@ def auto_detected_delimiter(file):
 
 def auto_detected_file(file_contains):
     ''' Uses str.contains to search for prefix
-        of file names, if unfound program will
+        of file names, if not found, program will
         terminate.'''
-    for file_counter in os.listdir('.'):
-        if file_contains.lower() in file_counter.lower():
-            file = file_counter
+    for file in os.listdir('.'):
+        if file_contains.lower() in file.lower():
+            print('Found a file match')
+            break
+        else:
+            file = ''
+
     if file == '':
-        print('*********************************************************************************************************************************************************')
         sys.exit('Cant find file that contains ' + file_contains + ', please rename file accordingly, program will now exit.')
-        print('*********************************************************************************************************************************************************')
     else:
         print('File found: ' + file)
     return file
@@ -144,27 +146,11 @@ def check_row_length(delimiter, file):
             sys.exit('Program now terminated')
             print('*************************')
 
-def getdelimiterValueWithValidation():
-    ''' NOT IN USE ANYMORE
-        Replaced with auto_detected_delimiter()'''
-    delimiterVal = '' 
-    while True:
-        delimiterVal = input('Please enter a delimiter value of | or , or tab: ')
-        if delimiterVal not in ('|', ',', 'tab'):
-            print("Not an appropriate choice.")
-        elif (delimiterVal == 'tab'):
-            delimiterVal = '\t'
-            break
-        else:
-            break
-    return delimiterVal        
-
 def transform_dataframe(file, df):
     ''' Takes out commas, nulls, apostrophe values
         from the data.'''
     #load CSV as panda dataframe - converters keeps padding in accountReference
     print(df.head(10))
-    print(df.dtypes)
     #delete all commas in the dataframe and replace with null
     df.replace(',','', regex = True, inplace = True)
     print ('Replaced all commas with null value.')
@@ -175,7 +161,8 @@ def transform_dataframe(file, df):
     df.replace('null','', regex = True, inplace = True)
     print ('Replaced the word null with empty value.')
 
-def date_parserv2(file, df):
+def date_parserv2(df):
+    #Timestamp('2262-04-11 23:47:16.854775807') limitation for year in Pandas library
     ''' Finds all columns with 'date' within them.
         Gathers them into a list and parses into
         date format YYYY-MM-DD'''
@@ -189,78 +176,12 @@ def date_parserv2(file, df):
     if len(date_columns) > 0:
         print ('List of date fields to_parse: ' + str(date_columns))
         for to_parse in date_columns:
-            #convert date into DD-MM-YYYY format for Rentsense
+            #Convert date into DD-MM-YYYY format for Rentsense
             print('Parsed ' + to_parse + ' into date value.')          
             df[to_parse] = pd.to_datetime(df[to_parse], dayfirst=True)
             df[to_parse] = df[to_parse].dt.strftime('%Y-%m-%d')
-
-def date_parser(file, df):
-    #Timestamp('2262-04-11 23:47:16.854775807') limitation for year
-    #Search for all columns with date then only parse them
-    if 'acc' in file.lower():
-        account_validation(file, df)
-        df['TenancyStartDate'] = pd.to_datetime(df.TenancyStartDate, dayfirst=True)
-        print('Parsed TenancyStartDate into date value.')
-        #convert date into DD-MM-YYYY format for Rentsense
-        df['TenancyStartDate'] = df['TenancyStartDate'].dt.strftime('%Y-%m-%d')
-         # Force AccountReference column as string
-        df.astype({'AccountReference':'string'})
-        df['AccountReference'] = df['AccountReference'].astype(str).str.strip()
-        print('TenancyStartDate converted to YYYY-MM-DD.')
-    elif 'tra' in file.lower():
-        df['TransactionPostDate'] = pd.to_datetime(df.TransactionPostDate, dayfirst=True)
-        df['TransactionDate'] = pd.to_datetime(df.TransactionDate, dayfirst=True)
-        print('Parsed Transaction dates into date value.')
-        #convert date into DD-MM-YYYY format for Rentsense
-        df['TransactionPostDate'] = df['TransactionPostDate'].dt.strftime('%Y-%m-%d')
-        df['TransactionDate'] = df['TransactionDate'].dt.strftime('%Y-%m-%d')
-        df['AccountReference'] = df['AccountReference'].astype(str).str.strip()
-        print('Transaction dates converted to YYYY-MM-DD.')
-        # Deletes trailing white space on column.
-        df['TransactionSign'] = df['TransactionSign'].str.strip()
-        df['TransactionDescription'] = df['TransactionDescription'].str.strip()
-    elif 'rent.action' in file.lower():
-        df['ActionDate'] = pd.to_datetime(df.ActionDate, dayfirst=True)
-        print('Parsed ActionDate into date value.')
-        #convert date into YYYY-MM-DD format for Rentsense
-        df['ActionDate'] = df['ActionDate'].dt.strftime('%Y-%m-%d')
-        df['AccountReference'] = df['AccountReference'].astype(str).str.strip()
-        print('ActionDate converted to YYYY-MM-DD.')       
-    elif 'arr' in file.lower():   
-        df['AgreementStartDate'] = pd.to_datetime(df.AgreementStartDate, dayfirst=True)
-        df['AgreementEndDate'] = pd.to_datetime(df.AgreementEndDate, dayfirst=True)
-        print('Parsed AgreementStartDate into date value.')
-        print('Parsed AgreementEndDate into date value.')
-        #convert date into YYYY-MM-DD format for Rentsense
-        df['AgreementStartDate'] = df['AgreementStartDate'].dt.strftime('%Y-%m-%d')
-        df['AgreementEndDate'] = df['AgreementEndDate'].dt.strftime('%Y-%m-%d')
-        df['AccountReference'] = df['AccountReference'].astype(str).str.strip()              
-        print('AgreementStartDate converted to YYYY-MM-DD.')
-        print('AgreementEndDate converted to YYYY-MM-DD.')  
-    elif 'bal' in file.lower():   
-        df['BalanceDate'] = pd.to_datetime(df.BalanceDate, dayfirst=True)
-        print('Parsed BalanceDate into date value.')
-        #convert date into YYYY-MM-DD format for Rentsense
-        df['BalanceDate'] = df['BalanceDate'].dt.strftime('%Y-%m-%d')
-        df['AccountReference'] = df['AccountReference'].astype(str).str.strip()              
-        print('BalanceDate converted to YYYY-MM-DD.')      
-    elif 'cont' in file.lower():   
-        df['ContactDate'] = pd.to_datetime(df.ContactDate, dayfirst=True)
-        print('Parsed ContactDate into date value.')
-        #convert date into YYYY-MM-DD format for Rentsense
-        df['ContactDate'] = df['ContactDate'].dt.strftime('%Y-%m-%d')
-        df['AccountReference'] = df['AccountReference'].astype(str).str.strip()              
-        print('ContactDate converted to YYYY-MM-DD.')
-    elif 'rec' in file.lower():   
-        df['RecommendedActionDate'] = pd.to_datetime(df.RecommendedActionDate, dayfirst=True)
-        #df['RecommendedActionDate'] = pd.to_datetime(df.RecommendedActionDate, format = '%d-%b')
-        print('Parsed RecommendedActionDate into date value.')
-        #convert date into YYYY-MM-DD format for Rentsense
-        df['RecommendedActionDate'] = df['RecommendedActionDate'].dt.strftime('%Y-%m-%d')
-        df['AccountReference'] = df['AccountReference'].astype(str).str.strip()              
-        print('RecommendedActionDate converted to YYYY-MM-DD.')
     else:
-        print('Did not parse any dates, check file name for issues.')
+        print('No date columns to parse.')
 
 def get_current_date():
     ''' Used for writing into the filename.'''
@@ -269,8 +190,7 @@ def get_current_date():
     return date
 
 def write_to_csv(filename, df):
-    df.astype(str)
-    print ('forced all columns as string.')
+
     existingPath = os.getcwd()
     newPath = os.getcwd() + '\Cleaned Files'
     try:
@@ -281,6 +201,7 @@ def write_to_csv(filename, df):
         print ("Successfully created the directory %s " % newPath)
     os.chdir(newPath)
     #takes out null occurences after parsing dataframe as string
+    df.astype(str)
     df.replace('nan','', regex = True, inplace = True)
     df.to_csv(filename + str(get_current_date()) + '.csv', encoding ='utf-8', index = False)
     print(str(time.process_time()) + ' seconds taken to clean feed.')
@@ -292,7 +213,7 @@ def controller(file_contains, filename_write):
     check_row_length(delimiter, file)
     df = initialise_dataframe(file, delimiter)
     transform_dataframe(file, df)
-    date_parserv2(file, df)
+    date_parserv2(df)
     write_to_csv(filename_write, df)
 
 if __name__ == "__main__":
