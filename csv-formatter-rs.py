@@ -5,6 +5,8 @@ import time
 import sys
 import os
 from detect_delimiter import detect
+import inspect
+
 
 def main():
     user_menu()
@@ -174,6 +176,9 @@ def transform_dataframe(file, df):
     print ('Replaced the word null with empty value.')
 
 def date_parserv2(file, df):
+    ''' Finds all columns with 'date' within them.
+        Gathers them into a list and parses into
+        date format YYYY-MM-DD'''
     date_columns = []
     column_headers = list(df.columns.values)
     for column in column_headers:
@@ -181,23 +186,13 @@ def date_parserv2(file, df):
             date_columns.append(column)
         else:
             next
-    print('Columns to date parse:')
-    print (date_columns)
-
     if len(date_columns) > 0:
+        print ('List of date fields to_parse: ' + str(date_columns))
         for to_parse in date_columns:
-            parse_name = name_of_global_obj(to_parse)
-            print (to_parse)
-            print (parse_name)
-
-            df[str(to_parse)] = pd.to_datetime(df.to_parse, dayfirst=True)
-            print('Parsed ' + to_parse + ' into date value.')
             #convert date into DD-MM-YYYY format for Rentsense
-            df[str(to_parse)] = df[str(to_parse)].dt.strftime('%Y-%m-%d')
-
-def name_of_global_obj(xx):
-    return [objname for objname, oid in globals().items()
-            if id(oid)==id(xx)][0]
+            print('Parsed ' + to_parse + ' into date value.')          
+            df[to_parse] = pd.to_datetime(df[to_parse], dayfirst=True)
+            df[to_parse] = df[to_parse].dt.strftime('%Y-%m-%d')
 
 def date_parser(file, df):
     #Timestamp('2262-04-11 23:47:16.854775807') limitation for year
