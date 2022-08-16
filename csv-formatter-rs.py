@@ -16,7 +16,7 @@ def user_menu():
         Single file transformation or all files transformation.'''
     while True:
         menuInput = input("""
-        Please enter number of which feed you want to clean:
+        Please enter number of which feed(s) you want to transform:
         1. rent.accounts
         2. rent.transactions
         3. rent.actions
@@ -25,7 +25,8 @@ def user_menu():
         6. rent.tenants
         7. rent.contacts
         8. rent.hmsrecommendations
-        9. All files.
+        9. Transform all rent files
+        10. Display all files avalilble to transform
         """)
 
         if menuInput.isdigit() == False:
@@ -58,7 +59,9 @@ def user_menu():
         controller('balan', 'rent.balances')          
         controller('tenan', 'rent.tenants')          
         controller('conta', 'rent.contacts')                  
-        controller('rec', 'rent.hmsrecommendations')                            
+        controller('rec', 'rent.hmsrecommendations')   
+    elif menuInput == 10:
+        auto_detected_all_files()                             
     else:
         sys.exit(0)
 
@@ -95,6 +98,44 @@ def auto_detected_file(file_contains):
     else:
         print('File found: ' + file)
     return file
+
+
+def auto_detected_all_files():
+    ''' Uses str.contains to search for prefix
+        of file names, if not found, program will
+        terminate.'''
+    rent_account = 'acc'
+    rent_actions = 'rent.action'
+    rent_arrangements = 'arrang'
+    rent_balances = 'balan'
+    rent_contacts = 'tenan'
+    rent_hmsrecs = 'rec'
+    rent_tenants = 'tenan'
+    rent_transactions = 'trans'
+
+    feeds = {}
+    file_found = []
+    check_file_contains = [rent_account,rent_actions,rent_arrangements,rent_balances,rent_contacts,
+                            rent_hmsrecs,rent_tenants,rent_transactions]
+    
+    #print(os.listdir('.'))
+    for file in os.listdir('.'):
+        for file_name_check in check_file_contains:
+            if file_name_check in file.lower():
+                print('Found a file match: ' + file)
+                if file_name_check == rent_account:
+                    feeds[file] = file_name_check
+                elif file_name_check == rent_actions:
+                    feeds[file] = file_name_check
+                elif file_name_check == rent_arrangements:
+                    feeds[file] = file_name_check      
+                elif file_name_check == rent_balances:
+                    feeds[file] = file_name_check               
+                file_found.append(file) 
+            else:
+                next
+    print (feeds)
+    return feeds
 
 def initialise_dataframe(file, delimiter):
     ''' Creates Panadas dataframe from csv read data.'''
