@@ -118,13 +118,13 @@ def auto_detected_all_files():
                 elif file_name_check == rent_balances:
                     feeds[file] = 'rent.balances'      
                 elif file_name_check == rent_contacts:
-                    feeds[file] = 'rent_contacts'               
+                    feeds[file] = 'rent.contacts'               
                 elif file_name_check == rent_hmsrecommendations:
-                    feeds[file] = 'rent_hmsrecommendations'               
+                    feeds[file] = 'rent.hmsrecommendations'               
                 elif file_name_check == rent_hmsrecommendations:
-                    feeds[file] = 'rent_tenants'               
+                    feeds[file] = 'rent.tenants'               
                 elif file_name_check == rent_transactions:
-                    feeds[file] = 'rent_transactions'               
+                    feeds[file] = 'rent.transactions'               
             else:
                 next
     for f in feeds:
