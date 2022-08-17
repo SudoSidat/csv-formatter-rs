@@ -5,8 +5,6 @@ import time
 import sys
 import os
 from detect_delimiter import detect
-import inspect
-
 
 def main():
     user_menu()
@@ -45,9 +43,9 @@ def user_menu():
     elif menuInput == 5:
         controller('balan', 'rent.balances')          
     elif menuInput == 6:
-        controller('tenan', 'rent.tenants')          
+        controller('tena', 'rent.tenants')          
     elif menuInput == 7:
-        controller('conta', 'rent.contacts')                  
+        controller('cont', 'rent.contacts')                  
     elif menuInput == 8:
         controller('rec', 'rent.hmsrecommendations')                  
     elif menuInput == 9:
@@ -96,9 +94,9 @@ def auto_detected_all_files():
     rent_actions = 'rent.action'
     rent_arrangements = 'arrang'
     rent_balances = 'balan'
-    rent_contacts = 'tenan'
+    rent_contacts = 'cont'
     rent_hmsrecommendations = 'rec'
-    rent_tenants = 'tenan'
+    rent_tenants = 'tena'
     rent_transactions = 'trans'
 
     feeds = {}
@@ -121,7 +119,7 @@ def auto_detected_all_files():
                     feeds[file] = 'rent.contacts'               
                 elif file_name_check == rent_hmsrecommendations:
                     feeds[file] = 'rent.hmsrecommendations'               
-                elif file_name_check == rent_hmsrecommendations:
+                elif file_name_check == rent_tenants:
                     feeds[file] = 'rent.tenants'               
                 elif file_name_check == rent_transactions:
                     feeds[file] = 'rent.transactions'               
@@ -225,7 +223,6 @@ def get_current_date():
     return date
 
 def write_to_csv(filename, df):
-
     existingPath = os.getcwd()
     newPath = os.getcwd() + '\Cleaned Files'
     try:
@@ -238,9 +235,12 @@ def write_to_csv(filename, df):
     #takes out null occurences after parsing dataframe as string
     df.astype(str)
     df.replace('nan','', regex = True, inplace = True)
-    df.to_csv(filename + str(get_current_date()) + '.csv', encoding ='utf-8', index = False)
+    file_to_write = filename + str(get_current_date()) + '.csv'
+    df.to_csv(file_to_write, encoding ='utf-8', index = False)
     print(str(time.process_time()) + ' seconds taken to clean feed.')
+    print('')
     os.chdir(existingPath)
+    return file_to_write
 
 def controller(file_contains, filename_write):
     file = auto_detected_file(file_contains)
@@ -249,9 +249,12 @@ def controller(file_contains, filename_write):
     df = initialise_dataframe(file, delimiter)
     transform_dataframe(file, df)
     date_parserv2(df)
-    write_to_csv(filename_write, df)
+    file_name = write_to_csv(filename_write, df)
+    print(file_name + ': Data transformation complete.')
+
 
 def controller_all_files():
+    list_of_files = []
     files_dictionary = auto_detected_all_files()
     for f in files_dictionary:
         file = f
@@ -260,7 +263,11 @@ def controller_all_files():
         df = initialise_dataframe(file, delimiter)
         transform_dataframe(file, df)
         date_parserv2(df)
-        write_to_csv(files_dictionary[f], df)
+        file_name = write_to_csv(files_dictionary[f], df)
+        list_of_files.append(file_name)
+    for f in list_of_files:
+        print(f + ': Data transformation complete.')
+
 
 if __name__ == "__main__":
     main()
