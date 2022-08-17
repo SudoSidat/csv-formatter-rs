@@ -26,7 +26,6 @@ def user_menu():
         7. rent.contacts
         8. rent.hmsrecommendations
         9. Transform all rent files
-        10. Display all files avalilble to transform
         """)
 
         if menuInput.isdigit() == False:
@@ -52,16 +51,7 @@ def user_menu():
     elif menuInput == 8:
         controller('rec', 'rent.hmsrecommendations')                  
     elif menuInput == 9:
-        controller('acc', 'rent.accounts')
-        controller('trans', 'rent.transactions')
-        controller('rent.action', 'rent.actions')
-        controller('arrang', 'rent.arrangements')   
-        controller('balan', 'rent.balances')          
-        controller('tenan', 'rent.tenants')          
-        controller('conta', 'rent.contacts')                  
-        controller('rec', 'rent.hmsrecommendations')   
-    elif menuInput == 10:
-        auto_detected_all_files()                             
+       controller_all_files()     
     else:
         sys.exit(0)
 
@@ -70,16 +60,15 @@ def auto_detected_delimiter(file):
         Automatically, defaults to comma but will 
         detect other seperators if ! comma.
         Returns delimiter, can feed into any function'''
-    with open(file, newline='') as csvfile:
-        reader = csv.reader(csvfile)
-        row1 = next(reader)  # gets the first line
+    with open(file) as csvfile:
+        firstline = csvfile.readline()
+        delimiter = detect(firstline)
         csvfile.close()
-        delimiter = detect(row1[0])
-        if delimiter == None: 
-            delimiter = ','
-            print ('Delimiter = ' + delimiter)
-        else: 
-            print ('Delimiter = ' + delimiter)
+    if delimiter == None: 
+        delimiter = ','
+        print ('Delimiter = ' + delimiter)
+    else: 
+        print ('Delimiter = ' + delimiter)
     return delimiter
 
 def auto_detected_file(file_contains):
@@ -92,7 +81,6 @@ def auto_detected_file(file_contains):
             break
         else:
             file = ''
-
     if file == '':
         sys.exit('Cant find file that contains ' + file_contains + ', please rename file accordingly, program will now exit.')
     else:
@@ -109,32 +97,38 @@ def auto_detected_all_files():
     rent_arrangements = 'arrang'
     rent_balances = 'balan'
     rent_contacts = 'tenan'
-    rent_hmsrecs = 'rec'
+    rent_hmsrecommendations = 'rec'
     rent_tenants = 'tenan'
     rent_transactions = 'trans'
 
     feeds = {}
-    file_found = []
     check_file_contains = [rent_account,rent_actions,rent_arrangements,rent_balances,rent_contacts,
-                            rent_hmsrecs,rent_tenants,rent_transactions]
+                            rent_hmsrecommendations,rent_tenants,rent_transactions]
     
     #print(os.listdir('.'))
     for file in os.listdir('.'):
         for file_name_check in check_file_contains:
             if file_name_check in file.lower():
-                print('Found a file match: ' + file)
                 if file_name_check == rent_account:
-                    feeds[file] = file_name_check
+                    feeds[file] = 'rent.accounts'
                 elif file_name_check == rent_actions:
-                    feeds[file] = file_name_check
+                    feeds[file] = 'rent.actions'
                 elif file_name_check == rent_arrangements:
-                    feeds[file] = file_name_check      
+                    feeds[file] = 'rent.arrangements'      
                 elif file_name_check == rent_balances:
-                    feeds[file] = file_name_check               
-                file_found.append(file) 
+                    feeds[file] = 'rent.balances'      
+                elif file_name_check == rent_contacts:
+                    feeds[file] = 'rent_contacts'               
+                elif file_name_check == rent_hmsrecommendations:
+                    feeds[file] = 'rent_hmsrecommendations'               
+                elif file_name_check == rent_hmsrecommendations:
+                    feeds[file] = 'rent_tenants'               
+                elif file_name_check == rent_transactions:
+                    feeds[file] = 'rent_transactions'               
             else:
                 next
-    print (feeds)
+    for f in feeds:
+        print ('Feed found: ' + f)
     return feeds
 
 def initialise_dataframe(file, delimiter):
@@ -215,7 +209,7 @@ def date_parserv2(df):
         else:
             next
     if len(date_columns) > 0:
-        print ('List of date fields to_parse: ' + str(date_columns))
+        print ('Date fields to parse: ' + str(date_columns))
         for to_parse in date_columns:
             #Convert date into DD-MM-YYYY format for Rentsense
             print('Parsed ' + to_parse + ' into date value.')          
@@ -256,6 +250,17 @@ def controller(file_contains, filename_write):
     transform_dataframe(file, df)
     date_parserv2(df)
     write_to_csv(filename_write, df)
+
+def controller_all_files():
+    files_dictionary = auto_detected_all_files()
+    for f in files_dictionary:
+        file = f
+        delimiter = auto_detected_delimiter(file)
+        check_row_length(delimiter, file)
+        df = initialise_dataframe(file, delimiter)
+        transform_dataframe(file, df)
+        date_parserv2(df)
+        write_to_csv(files_dictionary[f], df)
 
 if __name__ == "__main__":
     main()
