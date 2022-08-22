@@ -128,20 +128,20 @@ def auto_detected_all_files():
         print ('Feed found: ' + f)
     return feeds
 
-def validate_headers(delimiter, file):
-    with open(file, newline = '') as infile:
-        reader = csv.DictReader(infile)
-        fieldnames = reader.fieldnames
-        for header in fieldnames:
-            if header.startswith('sep'):
-                fieldnames = ''
-                fieldnames = next(reader).fieldnames
-                print(fieldnames)
-                break
-            else:
-                print('Invalid header')
+def validate_headersv2(delimiter, file):
+    list_of_column_names = []
 
-        print (fieldnames)
+    with open(file, newline = '') as infile:
+        reader = csv.reader(infile, delimiter=delimiter)
+        for row in reader:
+            invalid_header = False
+            if(any(item.startswith('sep') for item in row)):
+                invalid_header = True
+                continue
+            elif (invalid_header == False):
+                    list_of_column_names = row
+                    break
+    return list_of_column_names
 
 def initialise_dataframe(file, delimiter):
     ''' Creates Panadas dataframe from csv read data.'''
@@ -164,16 +164,15 @@ def account_validation(file, df):
             df.loc[(df.NeedsCategory == ''),'NeedsCategory'] = "Default Data"
             print('NeedsCategory column has now been added with default value')
 
-def check_row_length(delimiter, file):
+def check_row_length(delimiter, file, list_of_column_names):
     ''' Finds the number of columns 
         Compares number to the no. of Rows
         Flags if there's a mismatch.
         Can Continue program or terminate if issues found.'''
     bad_columns = 0
+    column_length = len(list_of_column_names)
     with open(file, newline = '') as csvfile:
         reader = csv.reader(csvfile, delimiter=delimiter)
-        first_row = next(reader)
-        column_length = len(first_row)
         for row in reader:
             if len(row) == 0:
                 continue
@@ -183,7 +182,7 @@ def check_row_length(delimiter, file):
             elif len(row) > column_length:
                 print ('Columns Expected = ' + str(column_length) + ', Actual Columns = ' + str(len(row)) + '. Line number: ' + str(reader.line_num))
                 bad_columns =+1
-    csvfile.close()
+
     if (bad_columns >= 1):
         print('*********************************************************************************************************************************************************')
         menu_choice = input('Check the files output and fix those before you proceed with cleanse, You can override this by pressing y or Y or press anything to exit and review file.')
@@ -259,8 +258,8 @@ def write_to_csv(filename, df):
 def controller(file_contains, filename_write):
     file = auto_detected_file(file_contains)
     delimiter = auto_detected_delimiter(file)
-    #validate_headers(delimiter, file)
-    check_row_length(delimiter, file)
+    headers_list = validate_headersv2(delimiter, file)
+    check_row_length(delimiter, file, headers_list)
     df = initialise_dataframe(file, delimiter)
     transform_dataframe(file, df)
     date_parserv2(df)
@@ -274,7 +273,8 @@ def controller_all_files():
     for f in files_dictionary:
         file = f
         delimiter = auto_detected_delimiter(file)
-        check_row_length(delimiter, file)
+        headers_list = validate_headersv2(delimiter, file)
+        check_row_length(delimiter, file, headers_list)
         df = initialise_dataframe(file, delimiter)
         transform_dataframe(file, df)
         date_parserv2(df)
