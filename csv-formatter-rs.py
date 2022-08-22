@@ -58,10 +58,9 @@ def auto_detected_delimiter(file):
         Automatically, defaults to comma but will 
         detect other seperators if ! comma.
         Returns delimiter, can feed into any function'''
-    with open(file) as csvfile:
+    with open(file, newline = '') as csvfile:
         firstline = csvfile.readline()
-        delimiter = detect(firstline)
-        csvfile.close()
+        delimiter = detect(firstline) 
     if delimiter == None: 
         delimiter = ','
         print ('Delimiter = ' + delimiter)
@@ -129,6 +128,21 @@ def auto_detected_all_files():
         print ('Feed found: ' + f)
     return feeds
 
+def validate_headers(delimiter, file):
+    with open(file, newline = '') as infile:
+        reader = csv.DictReader(infile)
+        fieldnames = reader.fieldnames
+        for header in fieldnames:
+            if header.startswith('sep'):
+                fieldnames = ''
+                fieldnames = next(reader).fieldnames
+                print(fieldnames)
+                break
+            else:
+                print('Invalid header')
+
+        print (fieldnames)
+
 def initialise_dataframe(file, delimiter):
     ''' Creates Panadas dataframe from csv read data.'''
     df = pd.read_csv(file, skipinitialspace = True, encoding ='utf-8', encoding_errors = 'backslashreplace', converters = {'accountreference' : lambda x: str(x)}, sep = delimiter, keep_default_na=False)
@@ -156,7 +170,7 @@ def check_row_length(delimiter, file):
         Flags if there's a mismatch.
         Can Continue program or terminate if issues found.'''
     bad_columns = 0
-    with open(file, newline='') as csvfile:
+    with open(file, newline = '') as csvfile:
         reader = csv.reader(csvfile, delimiter=delimiter)
         first_row = next(reader)
         column_length = len(first_row)
@@ -245,6 +259,7 @@ def write_to_csv(filename, df):
 def controller(file_contains, filename_write):
     file = auto_detected_file(file_contains)
     delimiter = auto_detected_delimiter(file)
+    #validate_headers(delimiter, file)
     check_row_length(delimiter, file)
     df = initialise_dataframe(file, delimiter)
     transform_dataframe(file, df)
