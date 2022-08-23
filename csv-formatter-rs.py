@@ -103,7 +103,6 @@ def auto_detected_all_files():
     check_file_contains = [rent_account,rent_actions,rent_arrangements,rent_balances,rent_contacts,
                             rent_hmsrecommendations,rent_tenants,rent_transactions]
     
-    #print(os.listdir('.'))
     for file in os.listdir('.'):
         for file_name_check in check_file_contains:
             if file_name_check in file.lower():
@@ -169,14 +168,67 @@ def validate_headers(delimiter, file):
 
     return list_of_column_names
 
-def check_required_headers():
-    rent_acc = ["AccountReference",
+def check_required_headers(headers_list, file):
+    
+    headers_not_found = []
+    headers_list = headers_list
+    file = file
+    rent_account_contains = 'acc'
+    rent_actions_contains = 'rent.action'
+    rent_arrangements_contains = 'arrang'
+    rent_balances_contains = 'balan'
+    rent_contacts_contains = 'cont'
+    rent_hmsrecommendations_contains = 'rec'
+    rent_tenants_contains = 'tena'
+    rent_transactions_contains = 'trans'
+    rent_account_required = ["AccountReference",
                 "HousingOfficerName",
                 "Patch",
                 "TenureType",
                 "TenureTypeCode",
                 "TenancyStartDate",
                 "LocalAuthority"]
+    rent_actions_required = ["AccountReference",
+                "ActionCode",
+                "ActionDescription",
+                "ActionDate",
+                "ActionSeq"]
+    check_file_contains = [rent_account_contains,rent_actions_contains,rent_arrangements_contains,rent_balances_contains,
+                        rent_contacts_contains,rent_hmsrecommendations_contains,rent_tenants_contains,rent_transactions_contains]
+    
+    for each_feed in check_file_contains:
+        if each_feed.lower() in file.lower():
+            print('file found: ' + file)
+            file = each_feed
+            break
+    if file == rent_account_contains:
+        for c in rent_account_required:
+            if c in headers_list:
+                continue
+            else:
+                headers_not_found.append(c)
+    elif (file == rent_actions_contains):
+        for c in rent_actions_required:
+            if c in headers_list:
+                continue
+            else:
+                headers_not_found.append(c)      
+
+    return headers_not_found
+
+
+'''
+    elif file == rent_arrangements:
+    elif file == rent_balances:
+    elif file == rent_contacts:
+    elif file == rent_hmsrecommendations:
+    elif file == rent_tenants:
+    elif file == rent_transactions:
+'''   
+
+
+
+
 
 def initialise_dataframe(file, delimiter):
     ''' Creates Panadas dataframe from csv read data.'''
@@ -294,6 +346,7 @@ def controller(file_contains, filename_write):
     delimiter = auto_detected_delimiter(file)
     headers_list = validate_headers(delimiter, file)
     check_row_length(delimiter, file, headers_list)
+    print (check_required_headers(headers_list, file))
     df = initialise_dataframe(file, delimiter)
     transform_dataframe(file, df)
     date_parserv2(df)
@@ -309,6 +362,7 @@ def controller_all_files():
         delimiter = auto_detected_delimiter(file)
         headers_list = validate_headers(delimiter, file)
         check_row_length(delimiter, file, headers_list)
+        check_required_headers(headers_list, file)
         df = initialise_dataframe(file, delimiter)
         transform_dataframe(file, df)
         date_parserv2(df)
