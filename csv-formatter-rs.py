@@ -1,3 +1,4 @@
+from http.client import OK
 import pandas as pd
 from datetime import datetime
 import csv
@@ -128,20 +129,54 @@ def auto_detected_all_files():
         print ('Feed found: ' + f)
     return feeds
 
-def validate_headersv2(delimiter, file):
+def validate_headers(delimiter, file):
+    '''Checks first line from file for "Account" If found then headers are valid,
+        program will return list of header. if not found then will go through rows,
+        until valid row of headers is found. If valid headers found, write to temp CSV,
+        temp CSV is renamed to original file deleting invalid data and only keeping
+        valid headers. If headers not found, program is terminated with error message.
+    '''
     list_of_column_names = []
-
-    with open(file, newline = '') as infile:
+    invalid_header = False
+    with open(file, newline = '',encoding='utf-8-sig') as infile:
         reader = csv.reader(infile, delimiter=delimiter)
-        for row in reader:
+        row1 = next(reader)
+        if(any(item.startswith('Account') for item in row1)):
             invalid_header = False
-            if(any(item.startswith('sep') for item in row)):
-                invalid_header = True
-                continue
-            elif (invalid_header == False):
+            list_of_column_names = row1
+        elif (not list_of_column_names):
+            invalid_header = True
+            for row in reader:
+                if (any(item.startswith('Account') for item in row)):
+                    invalid_header == False
                     list_of_column_names = row
-                    break
+                    with open('new'+file, 'w', newline='',encoding='utf-8') as f:
+                        writer = csv.writer(f)
+                        writer.writerow(list_of_column_names)
+                        writer.writerows(reader)
+                        break
+                else: 
+                    continue
+
+    if os.path.exists('new'+file):
+        os.rename(file,'delete'+file)
+        os.rename('new'+file,file)
+        os.remove('delete'+file)
+    elif not list_of_column_names:
+        sys.exit('No valid headers found, check spelling or if headers are in file: ' + file)
+    else:
+        invalid_header = False
+
     return list_of_column_names
+
+def check_required_headers():
+    rent_acc = ["AccountReference",
+                "HousingOfficerName",
+                "Patch",
+                "TenureType",
+                "TenureTypeCode",
+                "TenancyStartDate",
+                "LocalAuthority"]
 
 def initialise_dataframe(file, delimiter):
     ''' Creates Panadas dataframe from csv read data.'''
@@ -190,7 +225,6 @@ def check_row_length(delimiter, file, list_of_column_names):
         if menu_choice.lower() != 'y':
             print('*************************')
             sys.exit('Program now terminated')
-            print('*************************')
 
 def transform_dataframe(file, df):
     ''' Takes out commas, nulls, apostrophe values
@@ -258,7 +292,7 @@ def write_to_csv(filename, df):
 def controller(file_contains, filename_write):
     file = auto_detected_file(file_contains)
     delimiter = auto_detected_delimiter(file)
-    headers_list = validate_headersv2(delimiter, file)
+    headers_list = validate_headers(delimiter, file)
     check_row_length(delimiter, file, headers_list)
     df = initialise_dataframe(file, delimiter)
     transform_dataframe(file, df)
@@ -273,7 +307,7 @@ def controller_all_files():
     for f in files_dictionary:
         file = f
         delimiter = auto_detected_delimiter(file)
-        headers_list = validate_headersv2(delimiter, file)
+        headers_list = validate_headers(delimiter, file)
         check_row_length(delimiter, file, headers_list)
         df = initialise_dataframe(file, delimiter)
         transform_dataframe(file, df)
@@ -282,7 +316,6 @@ def controller_all_files():
         list_of_files.append(file_name)
     for f in list_of_files:
         print(f + ': Data transformation complete.')
-
 
 if __name__ == "__main__":
     main()
