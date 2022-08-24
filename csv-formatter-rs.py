@@ -169,7 +169,12 @@ def validate_headers(delimiter, file):
     return list_of_column_names
 
 def check_required_headers(headers_list, file):
-    
+    ''' Checks which file is currently being parsed, once identified, the function
+        Will get list of headers in file and compare them against the required headers
+        for that particular feed. headers_not_found[] list is appended when the header
+        required is not found in current file. The list of headers not found is then returned
+        so you can add those columns once Dataframe has been initialised.
+    '''   
     headers_not_found = []
     headers_list = headers_list
     file = file
@@ -177,28 +182,28 @@ def check_required_headers(headers_list, file):
     rent_actions_contains = 'rent.action'
     rent_arrangements_contains = 'arrang'
     rent_balances_contains = 'balan'
-    rent_contacts_contains = 'cont'
-    rent_hmsrecommendations_contains = 'rec'
     rent_tenants_contains = 'tena'
     rent_transactions_contains = 'trans'
-    rent_account_required = ["AccountReference",
-                "HousingOfficerName",
-                "Patch",
-                "TenureType",
-                "TenureTypeCode",
-                "TenancyStartDate",
-                "LocalAuthority"]
-    rent_actions_required = ["AccountReference",
-                "ActionCode",
-                "ActionDescription",
-                "ActionDate",
-                "ActionSeq"]
-    check_file_contains = [rent_account_contains,rent_actions_contains,rent_arrangements_contains,rent_balances_contains,
-                        rent_contacts_contains,rent_hmsrecommendations_contains,rent_tenants_contains,rent_transactions_contains]
-    
+
+    check_file_contains = [rent_account_contains,rent_actions_contains,rent_arrangements_contains,
+                            rent_balances_contains,rent_tenants_contains,rent_transactions_contains]
+
+    rent_account_required = ["AccountReference","HousingOfficerName",
+                            "Patch","TenureType","TenureTypeCode",
+                            "TenancyStartDate","LocalAuthority"]
+    rent_actions_required = ["AccountReference","ActionCode",
+                            "ActionDescription","ActionDate",
+                            "ActionSeq"]
+    rent_arr_tenants_required = ["AccountReference"]
+    rent_arrangements_or = ["ArrangementStartDate", "AgreementStartDate"]          
+    rent_arrangements_or2 = ["ArrangementCode", "AgreementCode"]   
+    rent_arrangements_or3 = ["ArrangementAmount","AgreementAmount"]       
+    rent_balances_required = ["AccountReference","CurrentBalance"]
+    rent_transactions_required = ["AccountReference","TransactionDate",
+                            "TransactionCode","TransactionAmount"]          
+     
     for each_feed in check_file_contains:
         if each_feed.lower() in file.lower():
-            print('file found: ' + file)
             file = each_feed
             break
     if file == rent_account_contains:
@@ -213,21 +218,43 @@ def check_required_headers(headers_list, file):
                 continue
             else:
                 headers_not_found.append(c)      
+    elif file == rent_arrangements_contains:
+        for c in rent_arr_tenants_required:
+            if c in headers_list:
+                continue
+            else:
+                headers_not_found.append(c)    
+        check_start_date = any(item in rent_arrangements_or for item in headers_list)
+        if check_start_date is False:
+            headers_not_found.append(rent_arrangements_or[0])
+        check_code = any(item in rent_arrangements_or2 for item in headers_list)
+        if check_code is False:
+            headers_not_found.append(rent_arrangements_or2[0])
+        check_amount = any(item in rent_arrangements_or3 for item in headers_list)
+        if check_amount is False:
+            headers_not_found.append(rent_arrangements_or3[0])
+    elif file == rent_balances_contains:
+        for c in rent_balances_required:
+            if c in headers_list:
+                continue
+            else:
+                headers_not_found.append(c) 
+    elif file == rent_tenants_contains:
+        for c in rent_arr_tenants_required:
+            if c in headers_list:
+                continue
+            else:
+                headers_not_found.append(c) 
+    elif file == rent_transactions_contains:
+        for c in rent_transactions_required:
+            if c in headers_list:
+                continue
+            else:
+                headers_not_found.append(c) 
+    if headers_not_found:
+        print('Headers not found: ' + str(headers_not_found))
 
     return headers_not_found
-
-
-'''
-    elif file == rent_arrangements:
-    elif file == rent_balances:
-    elif file == rent_contacts:
-    elif file == rent_hmsrecommendations:
-    elif file == rent_tenants:
-    elif file == rent_transactions:
-'''   
-
-
-
 
 
 def initialise_dataframe(file, delimiter):
@@ -346,7 +373,7 @@ def controller(file_contains, filename_write):
     delimiter = auto_detected_delimiter(file)
     headers_list = validate_headers(delimiter, file)
     check_row_length(delimiter, file, headers_list)
-    print (check_required_headers(headers_list, file))
+    check_required_headers(headers_list, file)
     df = initialise_dataframe(file, delimiter)
     transform_dataframe(file, df)
     date_parserv2(df)
