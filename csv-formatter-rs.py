@@ -75,12 +75,13 @@ def auto_detected_file(file_contains):
         terminate.'''
     for file in os.listdir('.'):
         if file_contains.lower() in file.lower():
-            #print('Found a file match')
             break
         else:
             file = ''
     if file == '':
+        print('---------------------------------------------------------------------------------------------------------------"')
         sys.exit('Cant find file that contains ' + file_contains + ', please rename file accordingly, program will now exit.')
+        print('---------------------------------------------------------------------------------------------------------------"')
     else:
         print('---------------------------------------------------"')
         print('File found: ' + file)
@@ -88,9 +89,10 @@ def auto_detected_file(file_contains):
     return file
 
 def auto_detected_all_files():
-    ''' Uses str.contains to search for prefix
-        of file names, if not found, program will
-        terminate.'''
+    ''' Function runs when user selects to transform all files. str.contains to search for prefix
+        of file names, if not found, program will terminate, else returns a list of feeds found,
+        used in controller_all_files.
+    '''
     rent_account = 'acc'
     rent_actions = 'rent.action'
     rent_arrangements = 'arrang'
@@ -157,7 +159,6 @@ def get_headers(delimiter, file):
                         break
                 else: 
                     continue
-
     if os.path.exists('new'+file):
         os.rename(file,'delete'+file)
         os.rename('new'+file,file)
@@ -307,7 +308,9 @@ def add_missing_headers(headers_list, df):
 
 def account_validation(file, df):
     ''' Validation specific to rent.accounts, checks for value
-        in LocalAuthority field if null then it will fill default data.'''
+        in LocalAuthority field if null then it will fill default data.
+        CURRENT NOT IN USE
+    '''
     if ('acc' in file.lower()):
         df.loc[(df.LocalAuthority == '') | (df.LocalAuthority == 'Unknown') | (df.LocalAuthority == 'NULL'), 'LocalAuthority'] = "Default HB Cycle"
         print('------------------------------------------------------------"')
@@ -322,10 +325,10 @@ def account_validation(file, df):
             print('NeedsCategory column has now been added with default value')
 
 def check_row_length(delimiter, file, list_of_column_names):
-    ''' Finds the number of columns 
-        Compares number to the no. of Rows
-        Flags if there's a mismatch.
-        Can Continue program or terminate if issues found.'''
+    ''' Finds the number of columns, Compares number to the no. of Rows
+        Flags if there's a mismatch so you can inspect the lines in the file.
+        Can Continue program or terminate if issues found.
+    '''
     bad_columns = 0
     column_length = len(list_of_column_names)
     with open(file, newline = '') as csvfile:
@@ -349,12 +352,13 @@ def check_row_length(delimiter, file, list_of_column_names):
             sys.exit('Program now terminated')
 
 def transform_dataframe(file, df):
-    ''' Takes out commas, nulls, apostrophe values
-        from the data.'''
+    ''' Takes out commas, nulls, apostrophe values from the data.
+    '''
     #load CSV as panda dataframe - converters keeps padding in accountReference
     print(df.head(10))
     #delete all commas in the dataframe and replace with null
     df.replace(',','', regex = True, inplace = True)
+    print('---------------------------------------"')
     print ('Replaced all commas with null value.')
     #delete all commas in the dataframe and replace with null
     df.replace("'",'', regex = True, inplace = True)
@@ -362,12 +366,15 @@ def transform_dataframe(file, df):
     df.replace('NULL','', regex = True, inplace = True)
     df.replace('null','', regex = True, inplace = True)
     print ('Replaced the word null with empty value.')
+    print('---------------------------------------"')
 
 def date_parserv2(df):
     #Timestamp('2262-04-11 23:47:16.854775807') limitation for year in Pandas library
-    ''' Finds all columns with 'date' within them.
-        Gathers them into a list and parses into
-        date format YYYY-MM-DD'''
+    ''' Finds all columns with 'date' within them. Gathers them into a list and parses into
+        date format YYYY-MM-DD. Please note: Due to dt.strftime('%Y-%m-%d') the date field
+        is turned into a str. If you need to do anything with the dates do them before
+        string formatting.
+    '''
     date_columns = []
     column_headers = list(df.columns.values)
     for column in column_headers:
@@ -376,15 +383,18 @@ def date_parserv2(df):
         else:
             next
     if len(date_columns) > 0:
+        print('------------------------------------------------------------"')
         print ('Date fields to parse: ' + str(date_columns))
+        print('------------------------------------------------------------"')
         for to_parse in date_columns:
             #Convert date into DD-MM-YYYY format for Rentsense
             print('Parsed ' + to_parse + ' into date value.')          
             df[to_parse] = pd.to_datetime(df[to_parse], dayfirst=True)
             df[to_parse] = df[to_parse].dt.strftime('%Y-%m-%d')
     else:
+        print('----------------------------"')
         print('No date columns to parse.')
-
+        print('----------------------------"')
 def get_current_date():
     ''' Used for writing into the filename.'''
     date = datetime.date(datetime.now())
@@ -392,6 +402,9 @@ def get_current_date():
     return date
 
 def write_to_csv(filename, df):
+    ''' Checks if "Cleaned Files" directory exists, if doesn't will create.
+        Writes filename using current date and correct filename. Encoding: UTF-8
+    '''
     existingPath = os.getcwd()
     newPath = os.getcwd() + '\Cleaned Files'
     try:
@@ -406,8 +419,8 @@ def write_to_csv(filename, df):
     df.replace('nan','', regex = True, inplace = True)
     file_to_write = filename + str(get_current_date()) + '.csv'
     df.to_csv(file_to_write, encoding ='utf-8', index = False)
+    print('---------------------------------------------"')
     print(str(time.process_time()) + ' seconds taken to clean feed.')
-    print('')
     os.chdir(existingPath)
     return file_to_write
 
@@ -422,7 +435,6 @@ def controller(file_contains, filename_write):
     transform_dataframe(file, df)
     date_parserv2(df)
     file_name = write_to_csv(filename_write, df)
-    print('------------------------------------------------------------"')
     print(file_name + ': Data transformation complete.')
     print('------------------------------------------------------------"')
 
