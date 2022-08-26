@@ -75,16 +75,17 @@ def auto_detected_file(file_contains):
         terminate.'''
     for file in os.listdir('.'):
         if file_contains.lower() in file.lower():
-            print('Found a file match')
+            #print('Found a file match')
             break
         else:
             file = ''
     if file == '':
         sys.exit('Cant find file that contains ' + file_contains + ', please rename file accordingly, program will now exit.')
     else:
+        print('---------------------------------------------------"')
         print('File found: ' + file)
+        print('---------------------------------------------------"')
     return file
-
 
 def auto_detected_all_files():
     ''' Uses str.contains to search for prefix
@@ -128,7 +129,7 @@ def auto_detected_all_files():
         print ('Feed found: ' + f)
     return feeds
 
-def validate_headers(delimiter, file):
+def get_headers(delimiter, file):
     '''Checks first line from file for "Account" If found then headers are valid,
         program will return list of header. if not found then will go through rows,
         until valid row of headers is found. If valid headers found, write to temp CSV,
@@ -252,24 +253,66 @@ def check_required_headers(headers_list, file):
             else:
                 headers_not_found.append(c) 
     if headers_not_found:
+        print('------------------------------------------------------------"')
         print('Headers not found: ' + str(headers_not_found))
+        print('------------------------------------------------------------"')
+
 
     return headers_not_found
 
 
 def initialise_dataframe(file, delimiter):
-    ''' Creates Panadas dataframe from csv read data.'''
-    df = pd.read_csv(file, skipinitialspace = True, encoding ='utf-8', encoding_errors = 'backslashreplace', converters = {'accountreference' : lambda x: str(x)}, sep = delimiter, keep_default_na=False)
+    ''' Creates Pandas dataframe from csv data read, parmeters include removing any non-ascii
+        via encoding_errors, converters fill force "AccountReference" into a string to keep it
+        intact. Once file is read, assigned to df so we can manipulate the dataframe object.
+    '''
+    df = pd.read_csv(file, skipinitialspace = True, encoding ='utf-8', encoding_errors = 'backslashreplace', converters = {'AccountReference' : lambda x: str(x)}, sep = delimiter, keep_default_na=False)
     return df
+
+def add_missing_headers(headers_list, df):
+    ''' Takes in list of missing headers, will go through each one adding them in.
+        Some headers will need data in them for RentSense to process properly
+        If blocks will attempt to add default values into some missing headers.
+    '''
+    headers_list = headers_list
+    for h in headers_list:
+        if h == 'LocalAuthority':
+            df[h] = ''
+            df.loc[(df.LocalAuthority == '') | (df.LocalAuthority == 'Unknown') | (df.LocalAuthority == 'NULL'), 'LocalAuthority'] = "Default HB Cycle"
+            print('-------------------------------------------------------------"')
+            print('LocalAuthority column now added with "Default HB Cycle".')
+            print('Map "Default HB Cycle" in IRR, unless they have multiple LAs.')
+            print('If client = Council then map "Default HB Cycle" in IRR as LA.')
+            print('-------------------------------------------------------------"')
+        elif h == 'Patch':
+            df[h] = ''
+            df.loc[(df.Patch == ''),'Patch'] = "Default Patch"
+            print('-------------------------------------------------------------"')
+            print('Patch column has now been added with "Default Patch"')
+            print('Advise client to add patch details in next data extract."')
+            print('-------------------------------------------------------------"')
+        elif h == 'HousingOfficerName':
+            df[h] = ''
+            df.loc[(df.HousingOfficerName == ''),'HousingOfficerName'] = "Default HousingOfficerName"
+            print('-------------------------------------------------------------"')
+            print('Patch column has now been added with "Default Patch"')
+            print('Advise client to add patch details in next data extract."')
+            print('-------------------------------------------------------------"')
+        else:
+            df[h] = ''
+            print('-----------------------------------------------------------------------------------------------"')
+            print ('Added header: ' + h + ' please check the correct data is appearing under this header.')
+            print('-----------------------------------------------------------------------------------------------"')
+
 
 def account_validation(file, df):
     ''' Validation specific to rent.accounts, checks for value
         in LocalAuthority field if null then it will fill default data.'''
     if ('acc' in file.lower()):
         df.loc[(df.LocalAuthority == '') | (df.LocalAuthority == 'Unknown') | (df.LocalAuthority == 'NULL'), 'LocalAuthority'] = "Default HB Cycle"
-        print('******************************************************************************************************************************')
-        print('A Cycle called "Default HB Cycle" was added in as there were blank tenancies found, check this in LocalAuthority Field.')
-        print('******************************************************************************************************************************')
+        print('------------------------------------------------------------"')
+        print('"Default HB Cycle" was added where LocalAuthority = ''.')
+        print('------------------------------------------------------------"')
         # try catch added if NeedsCategory doesn't exist it will create the column with a default value
         try:
             df.loc[(df.NeedsCategory == ''|""|" "),'NeedsCategory'] = "Default Data"
@@ -371,15 +414,17 @@ def write_to_csv(filename, df):
 def controller(file_contains, filename_write):
     file = auto_detected_file(file_contains)
     delimiter = auto_detected_delimiter(file)
-    headers_list = validate_headers(delimiter, file)
+    headers_list = get_headers(delimiter, file)
     check_row_length(delimiter, file, headers_list)
-    check_required_headers(headers_list, file)
+    missing_headers = check_required_headers(headers_list, file)
     df = initialise_dataframe(file, delimiter)
+    add_missing_headers(missing_headers, df)
     transform_dataframe(file, df)
     date_parserv2(df)
     file_name = write_to_csv(filename_write, df)
+    print('------------------------------------------------------------"')
     print(file_name + ': Data transformation complete.')
-
+    print('------------------------------------------------------------"')
 
 def controller_all_files():
     list_of_files = []
@@ -387,16 +432,18 @@ def controller_all_files():
     for f in files_dictionary:
         file = f
         delimiter = auto_detected_delimiter(file)
-        headers_list = validate_headers(delimiter, file)
+        headers_list = get_headers(delimiter, file)
         check_row_length(delimiter, file, headers_list)
-        check_required_headers(headers_list, file)
+        missing_headers = check_required_headers(headers_list, file)
         df = initialise_dataframe(file, delimiter)
+        add_missing_headers(missing_headers, df)
         transform_dataframe(file, df)
         date_parserv2(df)
         file_name = write_to_csv(files_dictionary[f], df)
         list_of_files.append(file_name)
     for f in list_of_files:
+        print('------------------------------------------------------------"')
         print(f + ': Data transformation complete.')
-
+        print('------------------------------------------------------------"')
 if __name__ == "__main__":
     main()
