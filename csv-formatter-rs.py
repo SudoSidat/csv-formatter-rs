@@ -383,9 +383,7 @@ def date_parserv2(df):
         else:
             next
     if len(date_columns) > 0:
-        print('------------------------------------------------------------"')
         print ('Date fields to parse: ' + str(date_columns))
-        print('------------------------------------------------------------"')
         for to_parse in date_columns:
             #Convert date into DD-MM-YYYY format for Rentsense
             print('Parsed ' + to_parse + ' into date value.')          
@@ -419,7 +417,7 @@ def write_to_csv(filename, df):
     df.replace('nan','', regex = True, inplace = True)
     file_to_write = filename + str(get_current_date()) + '.csv'
     df.to_csv(file_to_write, encoding ='utf-8', index = False)
-    print('---------------------------------------------"')
+    print('------------------------------------------------------------"')
     print(str(time.process_time()) + ' seconds taken to clean feed.')
     os.chdir(existingPath)
     return file_to_write
@@ -453,9 +451,9 @@ def controller_all_files():
         date_parserv2(df)
         file_name = write_to_csv(files_dictionary[f], df)
         list_of_files.append(file_name)
+    print('------------------------------------------------------------"')
     for f in list_of_files:
-        print('------------------------------------------------------------"')
         print(f + ': Data transformation complete.')
-        print('------------------------------------------------------------"')
+    print('------------------------------------------------------------"')
 if __name__ == "__main__":
     main()
