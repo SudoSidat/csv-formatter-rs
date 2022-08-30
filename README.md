@@ -49,7 +49,7 @@ Always try 9 for all files, if there an issue with a file it script will stop ru
 
 Once the script has run succesfully, it will create a folder in the directory called "Cleaned Files" and ouput CSV's will be named correctly for Rentsense. 
 
-# Common Errors
+## Common Errors
 
 * Rentsense requires each word to be capitalised for e.g. AccountReference even though is spelt together both main letters need to be capitalised, accountreference will not work in RentSense*.
 
