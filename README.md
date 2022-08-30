@@ -19,14 +19,13 @@ To run this project, install Pandas & detect_delimiter using pip.
 pip install Pandas
 pip instal detect_delimiter
 ```
-* Sscript will look for the name of the file, rent_actions must be renamed to rent.actions*
+* Script will look for the name of the file, rent_actions must be renamed to rent.actions*
 * Make sure all file names are spelt correctly, eg: ‘tenants’ not ‘tennants’
-* 
 
 ## Usage
 
-Place the script within the directory of all the CSV files you would like to cleanse.
-Then run the following:
+Place the script within the directory of all the raw CSV files you would like to cleanse.
+Then run the following command in a new CMD prompt within the directory:
 ```
 python csv-formatter-rs.py
 ```
