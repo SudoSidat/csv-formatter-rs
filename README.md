@@ -11,16 +11,24 @@ It uses the Pandas library to read the data and do the following:
 * Check each row of data to make sure there is complete data.
 * Adds in default values for certain columns if null.
 
+## Requirements
 
-## Pre-Requisites/Setup
+* Python 3.7 or above (Download from Microsoft Store)
+* pip (Will automatically be installed if you get Python from above)
+
+### Libraries
 
 To run this project, install Pandas & detect_delimiter using pip.
 ```
 pip install Pandas
 pip instal detect_delimiter
 ```
-* Script will look for the name of the file, rent_actions must be renamed to rent.actions*
-* Make sure all file names are spelt correctly, eg: ‘tenants’ not ‘tennants’
+
+## Pre-Requisites
+
+* Script will look for the name of the file, rent_actions must be renamed to rent.actions
+* Make sure all file names are spelt correctly, eg: tenants not tennants
+* Don't open cleaned files in excel and save as the date format will be changed. Use notepad++ for editing
 
 ## Usage
 
@@ -55,8 +63,3 @@ Once the script has run succesfully, it will create a folder in the directory ca
 
 * Columns Expected = x, Actual Columns = y, Line number = Z
 	This is due to an extra delimiter in the raw files. Edit the file in notepad++ and remove the extra delimiter. And type Y to Run the file. 
-  
- Note: Do not open cleaned files in excel and save as the date format will be changed. Use notepad++ for editing
-
-
-
