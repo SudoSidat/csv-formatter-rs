@@ -19,6 +19,7 @@ It uses the Pandas library to read the data and do the following:
 ### Libraries
 
 To run this project, install Pandas & detect_delimiter using pip.
+Open a CMD prompt and type the following:
 ```
 pip install Pandas
 pip instal detect_delimiter
@@ -27,8 +28,9 @@ pip instal detect_delimiter
 ## Pre-Requisites
 
 * Script will look for the name of the file, rent_actions must be renamed to rent.actions
-* Make sure all file names are spelt correctly, eg: tenants not tennants
+* Make sure all raw csv file names are spelt correctly, eg: tenants not tennants
 * Don't open cleaned files in excel and save as the date format will be changed. Use notepad++ for editing
+* Make sure all csv files to cleanse is in the same directory as Python script.
 
 ## Usage
 
@@ -51,11 +53,9 @@ You will be presented with the following menu:
         8. rent.hmsrecommendations
         9. Transform all rent files
 ```
-The menu will appear asking which feed you want to clean.
-
-Always try 9 for all files, if there an issue with a file it script will stop running there and you will have to manually rerun for each file using the menu.
-
-Once the script has run succesfully, it will create a folder in the directory called "Cleaned Files" and ouput CSV's will be named correctly for Rentsense. 
+* The menu will appear asking which feed you want to clean.
+* Always try 9 for all files, if there an issue with a file it script will stop running there and you will have to manually rerun for each file using the menu.
+* Once the script has run succesfully, it will create a folder in the directory called "Cleaned Files" and ouput CSV's will be named correctly for Rentsense. 
 
 ## Common Errors
 
