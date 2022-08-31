@@ -304,6 +304,8 @@ def headers_rename(rename_headers, df):
             print('------------------------------------------------------------"')
             print('Headers to rename: ' + str(wrong_header))
             print('------------------------------------------------------------"')
+        else:
+            pass
 
 def add_missing_headers(headers_list, df):
     ''' Takes in list of missing headers, will go through each one adding them in.
@@ -386,7 +388,18 @@ def check_row_length(delimiter, file, list_of_column_names):
             print('*************************')
             sys.exit('Program now terminated')
 
-def transform_dataframe(file, df):
+def whitespace_remover(dataframe):
+    ''' Takes out whitespaces from the data where dtype = object.
+    '''   
+    for i in dataframe.columns:   
+        # checking datatype of each columns
+        if dataframe[i].dtype == 'object':
+            # applying strip function on column
+            dataframe[i] = dataframe[i].map(str.strip)
+        else:            
+            pass
+
+def transform_dataframe(df):
     ''' Takes out commas, nulls, apostrophe values from the data.
     '''
     #load CSV as panda dataframe - converters keeps padding in accountReference
@@ -401,7 +414,10 @@ def transform_dataframe(file, df):
     df.replace('NULL','', regex = True, inplace = True)
     df.replace('null','', regex = True, inplace = True)
     print ('Replaced the word null with empty value.')
+    whitespace_remover(df)
+    print ('Removed whitespaces.')
     print('---------------------------------------"')
+
 
 def date_parserv2(df):
     #Timestamp('2262-04-11 23:47:16.854775807') limitation for year in Pandas library
@@ -466,7 +482,7 @@ def controller(file_contains, filename_write):
     df = initialise_dataframe(file, delimiter)
     headers_rename(rename_headers,df)
     add_missing_headers(missing_headers, df)
-    transform_dataframe(file, df)
+    transform_dataframe(df)
     date_parserv2(df)
     file_name = write_to_csv(filename_write, df)
     print(file_name + ': Data transformation complete.')
@@ -484,7 +500,7 @@ def controller_all_files():
         df = initialise_dataframe(file, delimiter)
         headers_rename(rename_headers,df)
         add_missing_headers(missing_headers, df)
-        transform_dataframe(file, df)
+        transform_dataframe(df)
         date_parserv2(df)
         file_name = write_to_csv(files_dictionary[f], df)
         list_of_files.append(file_name)
