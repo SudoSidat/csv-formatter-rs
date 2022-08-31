@@ -10,6 +10,8 @@ It uses the Pandas library to read the data and do the following:
 * Parses any date field into YYYY/MM/DD format.
 * Check each row of data to make sure there is complete data.
 * Adds in default values for certain columns if null.
+* Checks and fixes case sensitivity for required headers.
+
 
 ## Requirements
 
@@ -55,6 +57,7 @@ You will be presented with the following menu:
 ```
 * The menu will appear asking which feed you want to clean.
 * Always try 9 for all files, if there an issue with a file it script will stop running there and you will have to manually rerun for each file using the menu.
+* When you select your option, script will start to run and will auto detect delimiter.
 * Once the script has run succesfully, it will create a folder in the directory called "Cleaned Files" and ouput CSV's will be named correctly for Rentsense. 
 
 ## Common Errors
@@ -62,4 +65,4 @@ You will be presented with the following menu:
 * Rentsense requires each word to be capitalised for e.g. AccountReference even though is spelt together both main letters need to be capitalised, accountreference will not work in RentSense*.
 
 * Columns Expected = x, Actual Columns = y, Line number = Z
-	This is due to an extra delimiter in the raw files. Edit the file in notepad++ and remove the extra delimiter. And type Y to Run the file. 
+This is due to an extra delimiter in the raw files. Edit the file in notepad++ and remove the extra delimiter. And type Y to Run the file. 

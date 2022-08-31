@@ -143,13 +143,13 @@ def get_headers(delimiter, file):
     with open(file, newline = '',encoding='utf-8-sig') as infile:
         reader = csv.reader(infile, delimiter=delimiter)
         row1 = next(reader)
-        if(any(item.startswith('Account') for item in row1)):
+        if(any(item.startswith(("Account", "account")) for item in row1)):
             invalid_header = False
             list_of_column_names = row1
         elif (not list_of_column_names):
             invalid_header = True
             for row in reader:
-                if (any(item.startswith('Account') for item in row)):
+                if (any(item.startswith(("Account", "account")) for item in row)):
                     invalid_header == False
                     list_of_column_names = row
                     with open('new'+file, 'w', newline='',encoding='utf-8') as f:
@@ -178,6 +178,7 @@ def check_required_headers(headers_list, file):
         so you can add those columns once Dataframe has been initialised.
     '''   
     headers_not_found = []
+    headers_to_rename = []
     headers_list = headers_list
     file = file
     rent_account_contains = 'acc'
@@ -208,22 +209,29 @@ def check_required_headers(headers_list, file):
         if each_feed.lower() in file.lower():
             file = each_feed
             break
+    lower_headers_list = [lower_headers_list.lower() for lower_headers_list in headers_list]
     if file == rent_account_contains:
         for c in rent_account_required:
             if c in headers_list:
                 continue
+            elif c.lower() in lower_headers_list:
+                headers_to_rename.append(c)
             else:
                 headers_not_found.append(c)
     elif (file == rent_actions_contains):
         for c in rent_actions_required:
             if c in headers_list:
                 continue
+            elif c.lower() in lower_headers_list:
+                headers_to_rename.append(c)
             else:
                 headers_not_found.append(c)      
     elif file == rent_arrangements_contains:
         for c in rent_arr_tenants_required:
             if c in headers_list:
                 continue
+            elif c.lower() in lower_headers_list:
+                headers_to_rename.append(c)
             else:
                 headers_not_found.append(c)    
         check_start_date = any(item in rent_arrangements_or for item in headers_list)
@@ -239,27 +247,32 @@ def check_required_headers(headers_list, file):
         for c in rent_balances_required:
             if c in headers_list:
                 continue
+            elif c.lower() in lower_headers_list:
+                headers_to_rename.append(c)
             else:
                 headers_not_found.append(c) 
     elif file == rent_tenants_contains:
         for c in rent_arr_tenants_required:
             if c in headers_list:
                 continue
+            elif c.lower() in lower_headers_list:
+                headers_to_rename.append(c)
             else:
                 headers_not_found.append(c) 
     elif file == rent_transactions_contains:
         for c in rent_transactions_required:
             if c in headers_list:
                 continue
+            elif c.lower() in lower_headers_list:
+                headers_to_rename.append(c)
             else:
                 headers_not_found.append(c) 
     if headers_not_found:
         print('------------------------------------------------------------"')
         print('Headers not found: ' + str(headers_not_found))
         print('------------------------------------------------------------"')
-
-
-    return headers_not_found
+    
+    return headers_not_found, headers_to_rename
 
 
 def initialise_dataframe(file, delimiter):
@@ -269,6 +282,28 @@ def initialise_dataframe(file, delimiter):
     '''
     df = pd.read_csv(file, skipinitialspace = True, encoding ='utf-8', encoding_errors = 'backslashreplace', converters = {'AccountReference' : lambda x: str(x)}, sep = delimiter, keep_default_na=False)
     return df
+
+def headers_rename(rename_headers, df):
+    ''' Checks the case sensitivity of the headers, Rentsense will not run if case sensitivity
+        of headers are wrong, this function will check and correct them. 
+    '''
+    df = df
+    rename_headers = rename_headers
+    if not rename_headers:
+        print('-----------------------"')
+        print('No headers to rename.')
+        print('-----------------------"')
+    else:
+        for h in rename_headers:
+            wrong_header = [col for col in df.columns if h.lower() in col.lower()]
+            if len(wrong_header) > 0: 
+                for column in wrong_header:
+                    if column.lower() == h.lower():
+                        df.rename(columns = {column:h}, inplace = True)
+        if len(wrong_header) > 0:
+            print('------------------------------------------------------------"')
+            print('Headers to rename: ' + str(wrong_header))
+            print('------------------------------------------------------------"')
 
 def add_missing_headers(headers_list, df):
     ''' Takes in list of missing headers, will go through each one adding them in.
@@ -427,8 +462,9 @@ def controller(file_contains, filename_write):
     delimiter = auto_detected_delimiter(file)
     headers_list = get_headers(delimiter, file)
     check_row_length(delimiter, file, headers_list)
-    missing_headers = check_required_headers(headers_list, file)
+    missing_headers, rename_headers = check_required_headers(headers_list, file)
     df = initialise_dataframe(file, delimiter)
+    headers_rename(rename_headers,df)
     add_missing_headers(missing_headers, df)
     transform_dataframe(file, df)
     date_parserv2(df)
@@ -444,8 +480,9 @@ def controller_all_files():
         delimiter = auto_detected_delimiter(file)
         headers_list = get_headers(delimiter, file)
         check_row_length(delimiter, file, headers_list)
-        missing_headers = check_required_headers(headers_list, file)
+        missing_headers, rename_headers = check_required_headers(headers_list, file)
         df = initialise_dataframe(file, delimiter)
+        headers_rename(rename_headers,df)
         add_missing_headers(missing_headers, df)
         transform_dataframe(file, df)
         date_parserv2(df)
