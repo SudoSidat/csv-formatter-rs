@@ -368,7 +368,7 @@ def check_row_length(delimiter, file, list_of_column_names):
     '''
     bad_columns = 0
     column_length = len(list_of_column_names)
-    with open(file, newline = '') as csvfile:
+    with open(file, newline = '', encoding="utf-8") as csvfile:
         reader = csv.reader(csvfile, delimiter=delimiter)
         for row in reader:
             if len(row) == 0:
