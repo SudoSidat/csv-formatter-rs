@@ -140,7 +140,7 @@ def get_headers(delimiter, file):
     '''
     list_of_column_names = []
     invalid_header = False
-    with open(file, newline = '',encoding='utf-8-sig') as infile:
+    with open(file, newline = '') as infile:
         reader = csv.reader(infile, delimiter=delimiter)
         row1 = next(reader)
         if(any(item.startswith(("Account", "account")) for item in row1)):
@@ -368,7 +368,7 @@ def check_row_length(delimiter, file, list_of_column_names):
     '''
     bad_columns = 0
     column_length = len(list_of_column_names)
-    with open(file, newline = '', encoding="utf-8") as csvfile:
+    with open(file, newline = '') as csvfile:
         reader = csv.reader(csvfile, delimiter=delimiter)
         for row in reader:
             if len(row) == 0:
